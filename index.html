@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#17251b">
+<title>Study Timer</title>
+<style>
+:root{--green:#23813d;--green-dark:#17652d;--green-light:#dff5e2;--ink:#111813;--muted:#59675b;--paper:#fff;--soft:#f4f8f4;--line:#e3eae3}
+*{box-sizing:border-box}
+body{margin:0;background:#f2f5f2;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:18px}
+button,select{font:inherit}
+.app{width:min(760px,100%);margin:0 auto;padding:18px}
+.shell{background:var(--paper);border:1px solid var(--line);border-radius:26px;overflow:hidden;box-shadow:0 14px 40px #17251b0d}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:22px 22px 18px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:48px;height:48px;border-radius:14px;background:#17251b;color:#8be28c;display:grid;place-items:center;font-size:26px}
+h1{font-size:clamp(1.35rem,4vw,1.7rem);letter-spacing:.04em;margin:0;font-weight:850}
+.subtitle{font-size:1rem;color:var(--muted);margin-top:4px}
+.pill{background:#e7f7e9;color:#197438;padding:9px 13px;border-radius:999px;font-size:.78rem;font-weight:800;white-space:nowrap}
+.divider{height:1px;background:#e7ece7;margin:0 22px}
+.content{padding:20px 22px 24px}
+.steps{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;margin-bottom:18px}
+.step{border:0;background:#f5f7f5;border-radius:12px;padding:10px 3px;color:#4e5b50;display:flex;align-items:center;flex-direction:column;gap:7px;cursor:pointer;min-width:0}
+.step-number{height:28px;width:28px;display:grid;place-items:center;background:#dde4dd;border-radius:50%;font-size:.85rem;font-weight:800}
+.step-name{font-size:.82rem;font-weight:650;text-align:center;line-height:1.2}
+.step.active{background:var(--green-light);color:var(--green-dark)}
+.step.active .step-number{background:var(--green);color:white}
+.timer-panel{background:var(--soft);border-radius:24px;padding:22px 18px 20px;text-align:center}
+.eyebrow{font-size:.88rem;letter-spacing:.09em;font-weight:850;color:#347746}
+.session-title{font-size:clamp(1.7rem,6vw,2.15rem);margin:7px 0 0;font-weight:850}
+.ring{width:min(270px,75vw);margin:8px auto 0;position:relative;aspect-ratio:1}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:#dce9dc;stroke-width:8}
+.ring-progress{fill:none;stroke:#2d9a4c;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .3s}
+.time-display{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.time{font-size:clamp(3.2rem,13vw,4.4rem);font-weight:850;letter-spacing:-.055em;font-variant-numeric:tabular-nums}
+.status{color:#55705a;font-size:.85rem;font-weight:700;margin-top:2px}
+.session-meta{font-size:.95rem;color:#526456;margin:2px 0 18px}
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+button{cursor:pointer;border:0;transition:transform .12s,background .12s}
+button:active{transform:scale(.98)}
+.primary{background:var(--green);color:white;border-radius:13px;padding:14px 22px;font-weight:800;min-width:160px}
+.primary:hover{background:var(--green-dark)}
+.secondary{background:white;border:1px solid #cfd9cf;color:#26352a;border-radius:13px;padding:13px 17px;font-weight:750}
+.secondary:hover{background:#f5f8f5}
+.section-title{font-size:1.35rem;font-weight:850;margin:25px 0 5px}
+.section-sub{color:var(--muted);font-size:.98rem;margin:0 0 15px}
+.settings{border:1px solid var(--line);border-radius:18px;padding:17px;margin-top:12px}
+.setting-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.setting-icon{height:48px;width:48px;flex:none;border-radius:14px;background:#e1f4e4;color:#24783a;display:grid;place-items:center;font-size:25px}
+.setting-info{flex:1;min-width:0}
+.setting-name{font-size:1.1rem;font-weight:800}
+.setting-hint{font-size:.9rem;color:#69766b;margin-top:3px}
+.setting-value{font-size:1.2rem;color:#1b6f32;font-weight:850;white-space:nowrap}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.option{border:1.5px solid #cfd9cf;background:white;color:#334337;border-radius:12px;padding:12px 8px;font-size:.98rem;font-weight:750}
+.option.selected{background:var(--green);border-color:var(--green);color:white}
+.cycle{background:#17251b;color:white;border-radius:18px;padding:18px;margin-top:18px}
+.cycle-heading{font-size:1.1rem;font-weight:850;display:flex;align-items:center;gap:9px}
+.cycle p{color:#e0ece0;line-height:1.55;margin:10px 0 15px;font-size:.98rem}
+.total{border-top:1px solid #405346;padding-top:13px;display:flex;align-items:center;justify-content:space-between;gap:12px;color:#d2e3d3;font-size:.95rem}
+.total strong{color:#8be28c;font-size:1.3rem}
+.note{text-align:center;color:#78847a;font-size:.83rem;margin-top:15px}
+@media(max-width:520px){.app{padding:10px}.header{padding:17px 15px}.content{padding:15px}.divider{margin:0 15px}.steps{gap:4px}.step{padding:8px 1px}.step-name{font-size:.72rem}.step-number{height:25px;width:25px}.timer-panel{padding:19px 12px}.settings{padding:14px}.pill{font-size:.7rem;padding:8px}.primary{flex:1;min-width:130px}.secondary{padding:13px 14px}}
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="shell">
+    <header class="header">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">◷</div>
+        <div><h1>STUDY TIMER</h1><div class="subtitle">Focus better. Achieve more.</div></div>
+      </div>
+      <div class="pill">POMODORO</div>
+    </header>
+    <div class="divider"></div>
+    <div class="content">
+      <nav class="steps" id="steps" aria-label="Study cycle stages"></nav>
+      <section class="timer-panel" aria-live="polite">
+        <div class="eyebrow" id="eyebrow">TIME TO FOCUS</div>
+        <h2 class="session-title" id="sessionTitle">Focus</h2>
+        <div class="ring">
+          <svg viewBox="0 0 220 220" role="img" aria-label="Timer progress">
+            <circle class="ring-track" cx="110" cy="110" r="92"></circle>
+            <circle class="ring-progress" id="progress" cx="110" cy="110" r="92"></circle>
+          </svg>
+          <div class="time-display"><div class="time" id="time">50:00</div><div class="status" id="status">READY TO FOCUS</div></div>
+        </div>
+        <div class="session-meta" id="sessionMeta">Session 1 of 6 · 50 minutes</div>
+        <div class="controls">
+          <button class="primary" id="startPause">▶ Start timer</button>
+          <button class="secondary" id="skip" title="Skip to the next stage">Skip →</button>
+          <button class="secondary" id="restart" title="Restart the whole study cycle">↻ Restart</button>
+        </div>
+      </section>
+      <h2 class="section-title">Customize your sessions</h2>
+      <p class="section-sub">Choose your preferred duration for each session.</p>
+      <section class="settings">
+        <div class="setting-top"><div class="setting-icon">▤</div><div class="setting-info"><div class="setting-name">Focus time</div><div class="setting-hint">Deep work and studying</div></div><div class="setting-value" id="focusValue">50 min</div></div>
+        <div class="options"><button class="option selected" data-setting="focus" data-value="50">50 minutes</button><button class="option" data-setting="focus" data-value="25">25 minutes</button></div>
+      </section>
+      <section class="settings">
+        <div class="setting-top"><div class="setting-icon">☕</div><div class="setting-info"><div class="setting-name">Short break</div><div class="setting-hint">Rest between focus sessions</div></div><div class="setting-value" id="shortValue">10 min</div></div>
+        <div class="options"><button class="option selected" data-setting="short" data-value="10">10 minutes</button><button class="option" data-setting="short" data-value="5">5 minutes</button></div>
+      </section>
+      <section class="settings">
+        <div class="setting-top"><div class="setting-icon">⌁</div><div class="setting-info"><div class="setting-name">Long break</div><div class="setting-hint">Recharge after three focus sessions</div></div><div class="setting-value" id="longValue">15 min</div></div>
+        <div class="options"><button class="option selected" data-setting="long" data-value="15">15 minutes</button><button class="option" data-setting="long" data-value="10">10 minutes</button></div>
+      </section>
+      <section class="cycle">
+        <div class="cycle-heading"><span style="color:#8be28c">✓</span> Your study cycle</div>
+        <p id="cycleText">Focus 50m → Break 10m → Focus 50m → Break 10m → Focus 50m → Long break 15m</p>
+        <div class="total"><span>Total cycle</span><strong id="total">185 minutes</strong></div>
+      </section>
+      <div class="note">Your timer runs in this browser tab. Keep the tab open for the most reliable timing.</div>
+    </div>
+  </div>
+</main>
+<script>
+(() => {
+  const stageList = [
+    {name:"Focus",kind:"focus",number:1},
+    {name:"Short break",kind:"short",number:1},
+    {name:"Focus",kind:"focus",number:2},
+    {name:"Short break",kind:"short",number:2},
+    {name:"Focus",kind:"focus",number:3},
+    {name:"Long break",kind:"long",number:1}
+  ];
+  const durations = {focus:50,short:10,long:15};
+  let stageIndex = 0, remaining = durations.focus*60, running = false, endAt = null, interval = null;
+  const $ = id => document.getElementById(id);
+  const circle = $("progress"), circumference = 2*Math.PI*92;
+  circle.style.strokeDasharray = circumference;
+  function durationForStage(){return durations[stageList[stageIndex].kind]*60}
+  function formatTime(seconds){seconds=Math.max(0,Math.ceil(seconds));return `${String(Math.floor(seconds/60)).padStart(2,"0")}:${String(seconds%60).padStart(2,"0")}`}
+  function renderSteps(){
+    $("steps").innerHTML = "";
+    stageList.forEach((s,i)=>{
+      const b=document.createElement("button"); b.className="step"+(i===stageIndex?" active":""); b.type="button";
+      b.innerHTML=`<span class="step-number">${i+1}</span><span class="step-name">${s.name}</span>`;
+      b.setAttribute("aria-label",`Select stage ${i+1}: ${s.name}`);
+      b.addEventListener("click",()=>{stopTicker();stageIndex=i;remaining=durationForStage();render();});
+      $("steps").appendChild(b);
+    });
+  }
+  function render(){
+    const s=stageList[stageIndex], total=durationForStage();
+    $("sessionTitle").textContent=s.name;
+    $("eyebrow").textContent=s.kind==="focus"?"TIME TO FOCUS":s.kind==="short"?"TAKE A BREATHER":"YOU EARNED A LONG BREAK";
+    $("time").textContent=formatTime(remaining);
+    $("status").textContent=running?"TIMER RUNNING":"READY WHEN YOU ARE";
+    $("sessionMeta").textContent=`Session ${stageIndex+1} of 6 · ${durations[s.kind]} minutes`;
+    circle.style.strokeDashoffset=circumference*(1-Math.max(0,Math.min(1,remaining/total)));
+    $("startPause").innerHTML=running?"Ⅱ Pause":"▶ Start timer";
+    renderSteps();
+    document.title=`${formatTime(remaining)} · ${s.name} | Study Timer`;
+  }
+  function stopTicker(){running=false;if(interval){clearInterval(interval);interval=null}endAt=null}
+  function tick(){
+    remaining=Math.max(0,Math.ceil((endAt-Date.now())/1000));
+    if(remaining<=0){
+      stopTicker(); remaining=0; render();
+      try{if("Notification" in window && Notification.permission==="granted")new Notification("Study Timer",{body:`${stageList[stageIndex].name} finished! Time for the next stage.`})}catch(e){}
+      alert(`${stageList[stageIndex].name} finished!`);
+      stageIndex=(stageIndex+1)%stageList.length;remaining=durationForStage();render();
+      return;
+    }
+    render();
+  }
+  function start(){if(remaining<=0)remaining=durationForStage();running=true;endAt=Date.now()+remaining*1000;render();interval=setInterval(tick,250)}
+  $("startPause").addEventListener("click",()=>{if(running){remaining=Math.max(0,Math.ceil((endAt-Date.now())/1000));stopTicker();render()}else start()});
+  $("skip").addEventListener("click",()=>{stopTicker();stageIndex=(stageIndex+1)%stageList.length;remaining=durationForStage();render()});
+  $("restart").addEventListener("click",()=>{stopTicker();stageIndex=0;remaining=durations.focus*60;render()});
+  document.querySelectorAll("[data-setting]").forEach(button=>button.addEventListener("click",()=>{
+    const key=button.dataset.setting,value=Number(button.dataset.value);
+    durations[key]=value;
+    document.querySelectorAll(`[data-setting="${key}"]`).forEach(b=>b.classList.toggle("selected",b===button));
+    $(`${key}Value`).textContent=`${value} min`;
+    // Keep the current session's elapsed fraction sensible when its duration changes.
+    if(stageList[stageIndex].kind===key){stopTicker();remaining=value*60}
+    updateCycle();render();
+  }));
+  function updateCycle(){
+    $("cycleText").textContent=`Focus ${durations.focus}m → Break ${durations.short}m → Focus ${durations.focus}m → Break ${durations.short}m → Focus ${durations.focus}m → Long break ${durations.long}m`;
+    $("total").textContent=`${3*durations.focus+2*durations.short+durations.long} minutes`;
+  }
+  render();
+})();
+</script>
+</body>
+</html>
